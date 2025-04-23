@@ -12,6 +12,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Define the include directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+# Option to build tests (default ON)
+option(BUILD_TESTS "Build the test suite" ON)
 # Create an interface library for the header-only components
 add_library(roblib INTERFACE)
 target_include_directories(roblib INTERFACE
@@ -19,6 +21,29 @@ target_include_directories(roblib INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
+# Build tests if option is enabled
+if(BUILD_TESTS)
+    # Enable testing
+    enable_testing()
+    
+    # Find GTest package
+    find_package(GTest REQUIRED)
+    include(GoogleTest)
+    
+    # Create a test executable for circular buffer
+    add_executable(circular_buffer_test test/datatype/circular_buffer_test.cpp)
+    
+    # Link test executable with GTest and our library
+    target_link_libraries(circular_buffer_test
+        PRIVATE
+        GTest::GTest
+        GTest::Main
+        roblib
+    )
+    
+    # Add the test to CTest
+    gtest_discover_tests(circular_buffer_test)
+endif()
 # Installation rules
 install(TARGETS roblib
     EXPORT roblibTargets
