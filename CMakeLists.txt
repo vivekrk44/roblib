@@ -21,6 +21,18 @@ target_include_directories(roblib INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
+# Create a shared library
+add_library(roblibModels SHARED)
+
+# Add source files
+file(GLOB_RECURSE SOURCES "src/filters/kalman/models/*cpp")
+target_sources(roblibModels PRIVATE ${SOURCES})
+
+# Add include directory
+target_include_directories(roblibModels PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 # Build tests if option is enabled
 if(BUILD_TESTS)
     # Enable testing
@@ -32,7 +44,6 @@ if(BUILD_TESTS)
     
     # Create a test executable for circular buffer
     add_executable(circular_buffer_test test/datatype/circular_buffer_test.cpp)
-    
     # Link test executable with GTest and our library
     target_link_libraries(circular_buffer_test
         PRIVATE
@@ -40,10 +51,23 @@ if(BUILD_TESTS)
         GTest::Main
         roblib
     )
+
+    # Create a test executable for unscented kalman filter
+    add_executable(unscented_kalman_filter_test test/filters/unscented_kalman_filter_test.cpp)
+    # Link test executable with GTest and our library
+    target_link_libraries(unscented_kalman_filter_test
+        PRIVATE
+        GTest::GTest
+        GTest::Main
+        roblib
+        roblibModels
+    )
     
     # Add the test to CTest
     gtest_discover_tests(circular_buffer_test)
+    gtest_discover_tests(unscented_kalman_filter_test)
 endif()
+
 # Installation rules
 install(TARGETS roblib
     EXPORT roblibTargets
