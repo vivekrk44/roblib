@@ -9,9 +9,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Enable generation of compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Define the include directory
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
 # Option to build tests (default ON)
 option(BUILD_TESTS "Build the test suite" ON)
 # Create an interface library for the header-only components
@@ -77,7 +74,11 @@ install(TARGETS roblib
     INCLUDES DESTINATION include
 )
 
-install(DIRECTORY include/ DESTINATION include/roblib)
+# Install header files
+install(DIRECTORY include/ 
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
+)
 
 # Export the targets
 install(EXPORT roblibTargets
