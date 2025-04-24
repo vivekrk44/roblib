@@ -4,13 +4,13 @@ project(roblib VERSION 0.1.0 LANGUAGES CXX)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable generation of compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Option to build tests (default ON)
+# Option to build tests
 option(BUILD_TESTS "Build the test suite" ON)
+
 # Create an interface library for the header-only components
 add_library(roblib INTERFACE)
 target_include_directories(roblib INTERFACE
@@ -30,6 +30,10 @@ target_include_directories(roblibModels PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+# Link roblibModels to roblib to ensure they're connected
+target_link_libraries(roblibModels INTERFACE roblib)
+
 # Build tests if option is enabled
 if(BUILD_TESTS)
     # Enable testing
@@ -48,7 +52,7 @@ if(BUILD_TESTS)
         GTest::Main
         roblib
     )
-
+    
     # Create a test executable for unscented kalman filter
     add_executable(unscented_kalman_filter_test test/filters/unscented_kalman_filter_test.cpp)
     # Link test executable with GTest and our library
@@ -66,7 +70,7 @@ if(BUILD_TESTS)
 endif()
 
 # Installation rules
-install(TARGETS roblib
+install(TARGETS roblib roblibModels
     EXPORT roblibTargets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
