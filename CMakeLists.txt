@@ -67,6 +67,13 @@ if(BUILD_TESTS)
     # Add the test to CTest
     gtest_discover_tests(circular_buffer_test)
     gtest_discover_tests(unscented_kalman_filter_test)
+
+    # Create a custom target that runs all tests
+    add_custom_target(run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        DEPENDS circular_buffer_test unscented_kalman_filter_test
+        COMMENT "Running all tests automatically after build..."
+    )
 endif()
 
 # Installation rules
