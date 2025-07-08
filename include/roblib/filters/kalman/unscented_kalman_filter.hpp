@@ -90,6 +90,7 @@ class UnscentedKalmanFilter
      * @param timestamp The time stamp of the initial state
      */
     void init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp);
+    void init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp, const ControlVector& u0 = ControlVector::Zero());
 
     /**
      * @brief Get the index that is the closest timestamp which is before the given timestamp
@@ -355,6 +356,9 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
   D_TYPE dt = computeDt(timestamp, _timestamps.get(_states.size() - 1));
   // TODO: Handle this better
   if(dt < 0)
+    _log._ss << "dt is negative in predict: " << dt << "\n";
+    _log._ss << "This should not happend. Check your timestamps.\n";
+    _log.print(SimpleLogger::Color::RED);
     return;
   _x_t = _states.get(_states.size() - 1);
   _covariance = _covariances.get(_covariances.size() - 1);
@@ -433,7 +437,8 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
 template<class MODEL, typename D_TYPE, int STATE_SIZE, int CONTROL_SIZE, int MEASUREMENT_SIZE, int PROCESS_NOISE_SIZE, int MEASUREMENT_NOISE_SIZE, int HISTORY_SIZE>
 void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_SIZE,
                            PROCESS_NOISE_SIZE, MEASUREMENT_NOISE_SIZE, HISTORY_SIZE>::
-                           init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp)
+                           init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp,
+                                const ControlVector& u0)
 {
   if(_states.size() > 0)
   {
