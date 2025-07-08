@@ -89,7 +89,6 @@ class UnscentedKalmanFilter
      * @param P0 The initial covariance
      * @param timestamp The time stamp of the initial state
      */
-    void init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp);
     void init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp, const ControlVector& u0 = ControlVector::Zero());
 
     /**
