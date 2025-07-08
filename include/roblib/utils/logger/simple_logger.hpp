@@ -33,6 +33,12 @@ public:
     _ss.str("");
   }
 
+  static void print(std::string strn, Color color = Color::WHITE)
+  {
+    std::cout << getColorCode(color) << strn << getColorCode(Color::RESET) << std::endl;
+    
+  }
+
   std::stringstream _ss;
 private:
   /**
@@ -40,7 +46,7 @@ private:
    * @param color The color enum value
    * @return The ANSI escape sequence for the color
    */
-  std::string getColorCode(Color color) const
+  static std::string getColorCode(Color color) 
   {
       static const std::unordered_map<Color, std::string> colorCodes = {
           {Color::RED,     "\033[1;31m"},
