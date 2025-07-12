@@ -65,6 +65,8 @@ public:
   using ControlMatrix = Eigen::Matrix<D_TYPE, STATE_SIZE, CONTROL_SIZE>;
   using FeedbackGainMatrix = Eigen::Matrix<D_TYPE, CONTROL_SIZE, STATE_SIZE>;
 
+  using CONTROL_COST_MATRIX = Eigen::Matrix<D_TYPE, CONTROL_SIZE, CONTROL_SIZE>;
+
   // Trajectory types
   using StateTrajectory = std::vector<StateVector>;
   using ControlTrajectory = std::vector<ControlVector>;
@@ -89,6 +91,7 @@ public:
    * @param Q_final The final state cost matrix (penalizes final state deviation).
    */
   void setCost(const StateMatrix &Q, const Eigen::Matrix<D_TYPE, CONTROL_SIZE, CONTROL_SIZE> &R, const StateMatrix &Q_final)
+  void setCost(const StateMatrix &Q, const CONTROL_COST_MATRIX &R, const StateMatrix &Q_final)
   {
     _Q = Q;
     _R = R;
