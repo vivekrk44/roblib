@@ -117,26 +117,31 @@ public:
    * @param tolerance The convergence tolerance for the change in cost.
    * @return A pair containing the optimized state and control trajectories.
    */
-  std::pair<StateTrajectory, ControlTrajectory> run(const StateVector &x0, int max_iterations = 1000, D_TYPE tolerance = 1e-4)
+  std::pair<StateTrajectory, ControlTrajectory> run(const StateVector &x0, D_TYPE dt=0, int max_iterations = 1000, D_TYPE tolerance = 1e-4, int max_line_search_attempts = 10)
   {
+    if(dt > 0)
+    {
+      _dt = dt;
+    }
     // Initialize with a zero control sequence
-    ControlTrajectory u_trj(HORIZON, ControlVector::Zero());
-    StateTrajectory x_trj = forwardPass(x0, u_trj);
-    D_TYPE last_cost = computeTotalCost(x_trj, u_trj);
+    _control_trajectory.assign(HORIZON, ControlVector::Zero());
+    _state_trajectory[0] = x0;
+    forwardPass(x0, _control_trajectory);
+    D_TYPE last_cost = computeTotalCost(_state_trajectory, _control_trajectory);
     
     std::cout << "Initial Cost: " << last_cost << std::endl;
 
     for (int i = 0; i < max_iterations; ++i)
     {
       // 1. Backward Pass: Compute feedback gains
-      auto [K_trj, k_trj] = backwardPass(x_trj, u_trj);
+      auto [K_trj, k_trj] = backwardPass(_state_trajectory, _control_trajectory);
 
       // 2. Forward Pass with Line Search
       D_TYPE alpha = 1.0;
       bool cost_improved = false;
-      for (int j = 0; j < 10; ++j) // Line search attempts
+      for (int j = 0; j < max_line_search_attempts; ++j) // Line search attempts
       {
-        auto [x_new_trj, u_new_trj] = lineSearch(x_trj, u_trj, K_trj, k_trj, alpha);
+        auto [x_new_trj, u_new_trj] = lineSearch(_state_trajectory, _control_trajectory, K_trj, k_trj, alpha);
         D_TYPE new_cost = computeTotalCost(x_new_trj, u_new_trj);
         
         if (new_cost < last_cost)
@@ -147,8 +152,8 @@ public:
             return {x_new_trj, u_new_trj};
           }
           
-          x_trj = x_new_trj;
-          u_trj = u_new_trj;
+          _state_trajectory = x_new_trj;
+          _control_trajectory = u_new_trj;
           last_cost = new_cost;
           cost_improved = true;
           std::cout << "Iteration " << i + 1 << " | Cost: " << last_cost << " | Alpha: " << alpha << std::endl;
@@ -163,10 +168,9 @@ public:
         break;
       }
     }
-    return {x_trj, u_trj};
+    return {_state_trajectory, _control_trajectory};
   }
 
-private:
     /**
      * @brief Simulates the system forward in time with a given control sequence.
      * @param x0 The initial state.
@@ -175,13 +179,13 @@ private:
      */
     StateTrajectory forwardPass(const StateVector &x0, const ControlTrajectory &u_trj)
     {
-      StateTrajectory x_trj(HORIZON + 1);
-      x_trj[0] = x0;
+      _state_trajectory[0] = x0;
       for (int i = 0; i < HORIZON; ++i)
       {
-        x_trj[i + 1] = _system_model.stateTransitionFunction(x_trj[i], u_trj[i], _dt);
+        _state_trajectory[i + 1] = _system_model.stateTransitionFunction(_state_trajectory[i], 
+                                                                         _control_trajectory[i], 
+                                                                         _dt);
       }
-      return x_trj;
     }
 
     /**
@@ -273,14 +277,18 @@ private:
       return cost;
     }
 
-    // System and Algorithm Parameters
-    const SYSTEM_MODEL &_system_model;
-    D_TYPE _dt;
+private:
+  // System and Algorithm Parameters
+  const SYSTEM_MODEL &_system_model;
+  D_TYPE _dt;
 
-    // Cost function matrices
-    StateMatrix _Q, _Q_final;
-    Eigen::Matrix<D_TYPE, CONTROL_SIZE, CONTROL_SIZE> _R;
+  // Cost function matrices
+  StateMatrix _Q, _Q_final;
+  Eigen::Matrix<D_TYPE, CONTROL_SIZE, CONTROL_SIZE> _R;
 
-    // Goal state
-    StateVector _goal_state;
+  // Goal state
+  StateVector _goal_state;
+
+  StateTrajectory _state_trajectory;
+  ControlTrajectory _control_trajectory;
 };
