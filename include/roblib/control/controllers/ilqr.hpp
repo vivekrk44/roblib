@@ -73,16 +73,14 @@ public:
 
   /**
    * @brief Constructor for the iLQR solver.
-   * @param model An instance of the system model.
-   * @param dt The time step for the simulation.
    */
-  iLQR(const SYSTEM_MODEL &model, D_TYPE dt) : _system_model(model), _dt(dt)
-  {
-    // Default cost matrices
-    _Q.setIdentity();
-    _R.setIdentity();
-    _Q_final.setIdentity();
-  }
+  iLQR() : _state_trajectory(HORIZON + 1), 
+           _control_trajectory(HORIZON, ControlVector::Zero())
+    {
+        _Q.setIdentity();
+        _R.setIdentity();
+        _Q_final.setIdentity();
+    }
 
   /**
    * @brief Sets the cost function matrices.
@@ -90,12 +88,16 @@ public:
    * @param R The running control cost matrix (penalizes control effort).
    * @param Q_final The final state cost matrix (penalizes final state deviation).
    */
-  void setCost(const StateMatrix &Q, const Eigen::Matrix<D_TYPE, CONTROL_SIZE, CONTROL_SIZE> &R, const StateMatrix &Q_final)
   void setCost(const StateMatrix &Q, const CONTROL_COST_MATRIX &R, const StateMatrix &Q_final)
   {
     _Q = Q;
     _R = R;
     _Q_final = Q_final;
+  }
+
+  void setDt(D_TYPE dt)
+  {
+    _dt = dt;
   }
 
   /**
