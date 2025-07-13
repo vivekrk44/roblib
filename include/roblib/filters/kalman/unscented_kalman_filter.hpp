@@ -221,6 +221,8 @@ class UnscentedKalmanFilter
     bool _prediction_flag = false; //!> Flag to indicate if the prediction step has been performed
     bool _initialized = false;
     SimpleLogger _log; //!> Logger for the filter
+    
+    D_TYPE _last_timestamp = 0.0;
 };
 
 /**
@@ -290,6 +292,18 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
   {
     covariance(covariance() + _weight_covariance_i_process*(_propogated_sigma_points_process.col(i)-state())*(_propogated_sigma_points_process.col(i)-state()).transpose());
   }
+#ifdef DETAILED_LOG_PREDICT_STEP
+  std::stringstream _ss;
+  _ss << "Predicted state: " << _predicted_state.transpose() << std::endl;
+  _ss << "At time:  " << std::setprecision(20) <<  _last_timestamp << "\n";
+  _ss << "Control: " << control.transpose() << std::endl;
+  _ss  << "Dt: " << dt << " ";
+  _ss << "Weight mean 0 process: " << _weight_mean_0_process << " ";
+  _ss << "Weight mean i process: " << _weight_mean_i_process << " ";
+  _ss << "Weight covariance 0 process: " << _weight_covariance_0_process << " ";
+  _ss << "Weight covariance i process: " << _weight_covariance_i_process << std::endl;
+  _log.print(_ss.str(), SimpleLogger::Color::CYAN);
+#endif
 }
 
 template<class MODEL, typename D_TYPE, int STATE_SIZE, int CONTROL_SIZE, int MEASUREMENT_SIZE,int PROCESS_NOISE_SIZE, int MEASUREMENT_NOISE_SIZE, int HISTORY_SIZE>
@@ -338,6 +352,13 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
   _unscented_kalman_gain_K = (_unscented_measurement_matrix_C * _unscented_innovation_matrix_S.inverse());
   covariance(covariance() - ((_unscented_kalman_gain_K * _unscented_innovation_matrix_S) * _unscented_kalman_gain_K.transpose()));
   state(state() + _unscented_kalman_gain_K * (measurement - _predicted_measurement));
+#ifdef DETAILED_LOG_UPDATE_STEP
+  std::stringstream _ss;
+  _ss << "Predicted measurement: " << _predicted_measurement.transpose() << "\n";
+  _ss << "Updated state: " << state().transpose() << "\n";
+  _ss << "Kalman Gain\n" << _unscented_kalman_gain_K << "\nCrossCorelation\n" << _unscented_measurement_matrix_C << "\nInnovationCovariance\n" << _unscented_innovation_matrix_S;
+  _log.print(_ss.str(), SimpleLogger::Color::BLUE);
+#endif
 }
 
 
@@ -353,12 +374,15 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
 {
   // <! Update the state, covariance and dt 
   D_TYPE dt = computeDt(timestamp, _timestamps.get(_states.size() - 1));
+  _last_timestamp = timestamp;
   // TODO: Handle this better
   if(dt < 0)
+  {
     _log._ss << "dt is negative in predict: " << dt << "\n";
     _log._ss << "This should not happend. Check your timestamps.\n";
     _log.print(SimpleLogger::Color::RED);
     return;
+  }
   _x_t = _states.get(_states.size() - 1);
   _covariance = _covariances.get(_covariances.size() - 1);
 
@@ -383,13 +407,14 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
 {
   // !< Find the index for the timestamps 
   int index = getClosestIndex(timestamp, _timestamps);
-#ifdef DETAILED_LOG
+#ifdef DETAILED_LOG_UPDATE
   _log._ss << "Update index is: " << index << ", input TS: " << std::setprecision(20) << timestamp << ", selected: " << _timestamps.get(index) << "\n";
   _log._ss << "At index 0:  " << std::setprecision(20) <<  _timestamps.get(0) << "\n";
-  _log._ss << "At index -1: " << std::setprecision(20) <<  _timestamps.get(_timestamps.size() - 1) << "\n";
+  _log._ss << "At index " << _timestamps.size() << ": " << std::setprecision(20) <<  _timestamps.get(_timestamps.size() - 1) << "\n";
   _log.print(SimpleLogger::Color::GREEN);
+  _log._ss << "Got measurement: " << z.transpose();
+  _log.print(SimpleLogger::Color::MAGENTA);
 #endif
-
   // !< Compute dt
   D_TYPE dt = computeDt(timestamp, _timestamps.get(index));
 
