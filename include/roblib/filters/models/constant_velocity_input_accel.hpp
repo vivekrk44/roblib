@@ -43,4 +43,6 @@ public:
    */
   Eigen::Vector2d measurementFunction(
     const Eigen::Matrix<double, AUGMENTED_UPDATE_STATE_SIZE, 1>& state) const; 
+
+  double minDt() const { return 1e-8; } // Minimum time step for the model
 };

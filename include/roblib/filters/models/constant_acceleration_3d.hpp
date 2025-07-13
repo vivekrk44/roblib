@@ -23,7 +23,6 @@ public:
   static constexpr int AUGMENTED_PROCESS_STATE_SIZE = STATE_SIZE + PROCESS_NOISE_SIZE;    // Augmented state with Process noise
   static constexpr int AUGMENTED_UPDATE_STATE_SIZE = STATE_SIZE + MEASUREMENT_NOISE_SIZE; // Augmented state with Measurement noise
 
-  
   Eigen::Vector<double, STATE_SIZE> stateTransitionFunction(
     const Eigen::Matrix<double, AUGMENTED_PROCESS_STATE_SIZE, 1>& state,
     const Eigen::Matrix<double, CONTROL_SIZE, 1>& control,
@@ -31,4 +30,7 @@ public:
   
   Eigen::Vector<double, MEASUREMENT_SIZE> measurementFunction(
     const Eigen::Matrix<double, AUGMENTED_UPDATE_STATE_SIZE, 1>& state) const; 
+
+  double minDt() const{return 0.0025;}
+
 };

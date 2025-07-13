@@ -191,6 +191,19 @@ class CircularBuffer
      */
     bool full() const { return _full; }
 
+    /**
+     * @brief Clears the buffer, resetting it to an empty state
+     */
+    void clear()
+    {
+      _head = 0;
+      _tail = 0;
+      _size = 0;
+      _full = false;
+      _buffer.clear();
+      _buffer.resize(_capacity);
+    }
+
   private:
     std::vector<T> _buffer; // !< The underlying buffer allocated on the heap
                                  

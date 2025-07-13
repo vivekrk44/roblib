@@ -120,11 +120,11 @@ class UnscentedKalmanFilter
     void computeMeasurementLambdaWeights();
 
     // Setter and getter for the tunable parameters
-    void tunableAlpha(D_TYPE tunable_alpha) { _tunable_process_alpha = tunable_alpha; computeProcessLambdaWeights(); computeMeasurementLambdaWeights(); }
+    void tunableAlpha(D_TYPE tunable_alpha) { _tunable_process_alpha = tunable_alpha; _tunable_measurement_alpha = tunable_alpha; computeProcessLambdaWeights(); computeMeasurementLambdaWeights(); }
     D_TYPE tunableAlpha() const { return _tunable_process_alpha; }
-    void tunableBeta(D_TYPE tunable_beta) { _tunable_process_beta = tunable_beta;     computeProcessLambdaWeights(); computeMeasurementLambdaWeights();}
+    void tunableBeta(D_TYPE tunable_beta) { _tunable_process_beta = tunable_beta; _tunable_measurement_beta = tunable_beta; computeProcessLambdaWeights(); computeMeasurementLambdaWeights();}
     D_TYPE tunableBeta() const { return _tunable_process_beta; }
-    void tunableKappa(D_TYPE tunable_kappa) { _tunable_process_kappa = tunable_kappa; computeProcessLambdaWeights(); computeMeasurementLambdaWeights();}
+    void tunableKappa(D_TYPE tunable_kappa) { _tunable_process_kappa = tunable_kappa; _tunable_measurement_kappa = tunable_kappa; computeProcessLambdaWeights(); computeMeasurementLambdaWeights();}
     D_TYPE tunableKappa() const { return _tunable_process_kappa; }
 
     void systemModel(MODEL& system_model) { _system_model = system_model; }
@@ -188,12 +188,12 @@ class UnscentedKalmanFilter
     InnovationMatrix       _unscented_innovation_matrix_S; //!> Unscented innovation matrix
     KalmanGainMatrix       _unscented_kalman_gain_K;      //!> Unscented Kalman gain matrix
 
-    D_TYPE _tunable_process_alpha = 0.001; //!> Alpha tunes the spread of the sigma points around the mean. Tunable parameter, default values works well for gaussian approximation. Dont change unless you know what you are doing
+    D_TYPE _tunable_process_alpha = 0.4; //!> Alpha tunes the spread of the sigma points around the mean. Tunable parameter, default values works well for gaussian approximation. Dont change unless you know what you are doing
     D_TYPE _tunable_process_beta  = 2.0;   //!> Beta tunes the spread of the sigma points around the tail. Tunable parameter, default values works well in many cases. Dont change unless you know what you are doing
     D_TYPE _tunable_process_kappa = 1.0;   //!> Kappa tunes the spread of the sigma points around the head. Tunable parameter, default values works well in many cases. Dont change unless you know what you are doing
     D_TYPE _process_lambda;                //!> Lambda for the process model, computed using alpha, kappa and augmented state size
     
-    D_TYPE _tunable_measurement_alpha = 0.001; //!> Alpha tunes the spread of the sigma points around the mean. Tunable parameter, default values works well for gaussian approximation. Dont change unless you know what you are doing
+    D_TYPE _tunable_measurement_alpha = 0.4; //!> Alpha tunes the spread of the sigma points around the mean. Tunable parameter, default values works well for gaussian approximation. Dont change unless you know what you are doing
     D_TYPE _tunable_measurement_beta  = 2.0;   //!> Beta tunes the spread of the sigma points around the tail. Tunable parameter, default values works well in many cases. Dont change unless you know what you are doing
     D_TYPE _tunable_measurement_kappa = 1.0;   //!> Kappa tunes the spread of the sigma points around the head. Tunable parameter, default values works well in many cases. Dont change unless you know what you are doing
     D_TYPE _measurement_lambda;                //!> Lambda for the process model, computed using alpha, kappa and augmented state size
@@ -464,12 +464,16 @@ void UnscentedKalmanFilter<MODEL, D_TYPE, STATE_SIZE, CONTROL_SIZE, MEASUREMENT_
                            init(const StateVector& x0, const CovarianceMatrix& P0, D_TYPE timestamp,
                                 const ControlVector& u0)
 {
-  if(_states.size() > 0)
+  if(_states.size() > 0 || _covariances.size() > 0 || _controls.size() > 0 || _timestamps.size() > 0)
   {
     _log._ss << "States size is: << " << _states.size() << std::endl;
     _log._ss << "ERROR NOT EMPTY FILTER\n";
     _log.print(SimpleLogger::Color::RED);
-    return;
+    // Reset the sizes 
+    _states.clear();
+    _covariances.clear();
+    _controls.clear();
+    _timestamps.clear();
   }
   _x_t = x0;
   _covariance = P0;

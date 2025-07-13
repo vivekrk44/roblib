@@ -191,6 +191,8 @@ public:
   void gravity(TYPE gravity) { _gravity = gravity; }
   TYPE gravity() const { return _gravity; }
 
+  TYPE minDt() const { return 1e-8; } //!< Minimum timestep interval
+
   TYPE _dt;
 
 private:

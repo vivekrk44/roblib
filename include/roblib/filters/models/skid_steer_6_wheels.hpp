@@ -81,6 +81,9 @@ public:
    */
   const RobotParams& getParams() const { return params_; }
   void setParams(const RobotParams& params) { params_ = params; }
+
+
+  double minDt() const { return 1e-8; } // Minimum time step for the model
 };
 
 /*namespace SkidSteerHelpers {*/
