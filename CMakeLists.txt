@@ -44,6 +44,16 @@ if(BUILD_TESTS)
     include(GoogleTest)
     
     # Create a test executable for circular buffer
+    add_executable(ilqr_test test/controller/ilqr.cpp)
+    # Link test executable with GTest and our library
+    target_link_libraries(ilqr_test
+        PRIVATE
+        GTest::GTest
+        GTest::Main
+        roblib
+    )
+
+    # Create a test executable for circular buffer
     add_executable(circular_buffer_test test/datatype/circular_buffer_test.cpp)
     # Link test executable with GTest and our library
     target_link_libraries(circular_buffer_test
@@ -67,6 +77,7 @@ if(BUILD_TESTS)
     # Add the test to CTest
     gtest_discover_tests(circular_buffer_test)
     gtest_discover_tests(unscented_kalman_filter_test)
+    gtest_discover_tests(ilqr_test)
 
     # Create a custom target that runs all tests
     add_custom_target(run_tests ALL
