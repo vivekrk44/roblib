@@ -74,13 +74,15 @@ public:
   /**
    * @brief Constructor for the iLQR solver.
    */
-  iLQR() : _state_trajectory(HORIZON + 1), 
-           _control_trajectory(HORIZON, ControlVector::Zero())
-    {
-        _Q.setIdentity();
-        _R.setIdentity();
-        _Q_final.setIdentity();
-    }
+  iLQR()
+  {
+    _Q.setIdentity();
+    _R.setIdentity();
+    _Q_final.setIdentity();
+
+    _state_trajectory.resize(HORIZON + 1, StateVector::Zero());
+    _control_trajectory.resize(HORIZON, ControlVector::Zero());
+  }
 
   /**
    * @brief Sets the cost function matrices.
@@ -186,6 +188,7 @@ public:
                                                                          _control_trajectory[i], 
                                                                          _dt);
       }
+      return _state_trajectory;
     }
 
     /**
@@ -277,9 +280,15 @@ public:
       return cost;
     }
 
+    SYSTEM_MODEL &getSystemModel()
+    {
+      return _system_model;
+    }
+
+
 private:
   // System and Algorithm Parameters
-  const SYSTEM_MODEL &_system_model;
+  SYSTEM_MODEL _system_model;
   D_TYPE _dt;
 
   // Cost function matrices
