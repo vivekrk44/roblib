@@ -44,7 +44,7 @@ if(BUILD_TESTS)
     include(GoogleTest)
     
     # Create a test executable for circular buffer
-    add_executable(ilqr_test test/controller/ilqr.cpp)
+    add_executable(ilqr_test test/controller/ilqr_test.cpp)
     # Link test executable with GTest and our library
     target_link_libraries(ilqr_test
         PRIVATE
